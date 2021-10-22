@@ -11,6 +11,7 @@
 ## Additional Informations for LD (Not important if you're not him)
 -   Sujet Court
 -   5 Interactions
--   Calcul basés sur des données réelles
+-   Calcul basés sur des données et formules réelles
+-   Mise à échelle automatique pour l'affichage du système
 -   Musique incluse ;)
 
