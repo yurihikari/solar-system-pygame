@@ -71,7 +71,8 @@ def angle_per_frame(period):
     rpf = -1 * (2 * math.pi) / total_frames
     return rpf # Radiant Per Frame
 
-
+def getDistance(pos):
+    print(pos)
 
 planet_period = 0
 planet_angle_per_frame = 0
@@ -117,7 +118,7 @@ while play:
             elif(orbit_color == black):
                 orbit_color = white
         if event.type == pygame.MOUSEBUTTONUP and paused == False and event.button == LEFT:
-            print("test")
+            getDistance(event.pos)
         if event.type == pygame.KEYUP:
             print(event.key, event.unicode, event.scancode)
             # Emulation speed event
