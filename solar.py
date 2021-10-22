@@ -2,13 +2,11 @@
 import sys, pygame, math
 import random as r 
 
-
 # ------------------------------------------------- #
 # Please read the readme.md for more details        #
 # Not made for accurate simulation purpose          #
 # Made by yurihikari https://github.com/yurihikari  #
 # ------------------------------------------------- #
-
 
 pygame.init()
 
@@ -84,7 +82,7 @@ def radiant_per_frame(period):
 
 # Calculate the AU distance and add some variables to make it displayable
 def convert_to_display_distance(realdistance):
-    return 130 + realdistance/EARTH_DISTANCE*20 #130 (Sun sprite size) + Conversion to UA * Multiplicator for bigger gap between each planet
+    return 130 + realdistance/EARTH_DISTANCE*20 #130 (Sun Radius) + Conversion to UA * Multiplicator for bigger gap between each planet
 # Calculate back the real distance
 def convert_to_real_distance(distancepx):
     return (distancepx-130)*EARTH_DISTANCE/20
