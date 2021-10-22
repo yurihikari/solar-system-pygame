@@ -23,9 +23,9 @@ MARS_DISTANCE = 2.8 * math.pow(10, 11)
 NEPTUNE_DISTANCE = 4.5 * math.pow(10, 12)
 JUPITER_DISTANCE = 7.8 * math.pow(10, 11)
 SATURN_DISTANCE = 1.4 * math.pow(10,12)
-VENUS_DISTANCE = 6.1 * math.pow(10,10) # REAL VALUES : 1.1 * math.pow(10,10) (TOO FAST)
+VENUS_DISTANCE = 1.1 * math.pow(10,10) # VERY FAST
 URANUS_DISTANCE = 1.8 * math.pow(10,12)
-
+RANDOM_DISTANCE = r.randrange(1,7) * math.pow(10, r.randrange(10,12))
 MASS_OF_THE_SUN = 2.0 * math.pow(10, 30)
 EMULATION_SPEED = 10000000 # 1 for Real time speed but its too slow
 FPS = 60
@@ -36,6 +36,8 @@ bg = pygame.image.load("space.jpg")
 sunImg = pygame.image.load("sun.png")
 bgmusic = pygame.mixer.music.load('bgmusic.ogg')
 pygame.mixer.music.play(-1)
+menumusic = pygame.mixer.Sound("pause.ogg")
+
 # pygame.draw.circle(screen,  (255, 100, 0), (100,100), 20)
 # pygame.draw.aaline(screen, (255, 255, 255), (160, 100), p)
 # screen.set_at((10, 10), (255,0,0))
@@ -70,10 +72,11 @@ def angle_per_frame(period):
     return rpf # Radiant Per Frame
 
 
+
 planet_period = 0
 planet_angle_per_frame = 0
 
-# Le Soleil pour référence et totalement impassible aux mouvements
+# The Sun as reference and not moving
 sun = solarObject("Sun", (0,0,0), 0, 0, 0, (0,120))
 # Planets Array
 planets = [ 
@@ -86,12 +89,20 @@ planets = [
             solarObject("Uranus", (255,255,255), 700, URANUS_DISTANCE, 24.6, (600,700)),\
             solarObject("Neptune", (100,100,255), 800, NEPTUNE_DISTANCE, 20, (700,800)),\
             ]
+
+
 # Not 100% Accurate Size scaling
 # Display Distance made by hand (or it would be too far)
+
 paused = False
 play = True
 clock = pygame.time.Clock()
+# Some events variables
+orbit_width = 1
+orbit_color = white
 speed_text = "X" + str(int(EMULATION_SPEED)) + " Speed (UP KEY/DOWN KEY)"
+LEFT = 1
+RIGHT = 3
 
 while play:
     for event in pygame.event.get():
@@ -99,18 +110,29 @@ while play:
             play = False
         if event.type == pygame.MOUSEMOTION:
             mouse = event.pos
+        # Orbit Circle Hide/Show
+        if event.type == pygame.MOUSEBUTTONUP and paused == False and event.button == RIGHT:
+            if(orbit_color == white):
+                orbit_color = black
+            elif(orbit_color == black):
+                orbit_color = white
+        if event.type == pygame.MOUSEBUTTONUP and paused == False and event.button == LEFT:
+            print("test")
         if event.type == pygame.KEYUP:
             print(event.key, event.unicode, event.scancode)
+            # Emulation speed event
             if event.key == pygame.K_UP:
                 if EMULATION_SPEED < 80000000 and paused == False:
                     EMULATION_SPEED = EMULATION_SPEED * 2
                     speed_text = "X" + str(int(EMULATION_SPEED)) + " Speed (UP KEY/DOWN KEY)"
             if event.key == pygame.K_DOWN:
-                if EMULATION_SPEED > 1250000 and paused == False:
+                if EMULATION_SPEED > 78125 and paused == False:
                     EMULATION_SPEED = EMULATION_SPEED / 2
                     speed_text = "X" + str(int(EMULATION_SPEED)) + " Speed (UP KEY/DOWN KEY)"
+            # Pause Event
             if event.key == pygame.K_ESCAPE and paused == False:
                 pygame.mixer.music.pause()
+                menumusic.play()
                 paused = True
                 pause_text = "Paused"
                 pause_help1 = "Press c or ESC to Continue"
@@ -127,9 +149,11 @@ while play:
                 screen.blit(TextSurf2, TextRect2)
                 pygame.display.update()
             elif event.key == pygame.K_c and paused == True:
+                menumusic.stop()
                 pygame.mixer.music.unpause()
                 paused = False
             elif event.key == pygame.K_ESCAPE and paused == True:
+                menumusic.stop()
                 pygame.mixer.music.unpause()
                 paused = False
             elif event.key == pygame.K_q and paused == True:
@@ -157,7 +181,7 @@ while play:
             sun_orbit_x = sun_x
             sun_orbit_y = sun_y
             # Draw the orbit line
-            pygame.draw.circle(screen, white, [sun_orbit_x, sun_orbit_y], planet.distancepx, width=1)
+            pygame.draw.circle(screen, orbit_color, [sun_orbit_x, sun_orbit_y], planet.distancepx, width=orbit_width)
             # Draw the planet
             pygame.draw.circle(screen, planet.color, [planet_x, planet_y], planet.radius)
             # Name
