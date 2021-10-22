@@ -1,10 +1,13 @@
+# Imports
 import sys, pygame, math
 import random as r 
 
 
-# -------------------------------------------- #
-#   Please read the readme.md for more details #
-# -------------------------------------------- #
+# ------------------------------------------------- #
+# Please read the readme.md for more details        #
+# Not made for accurate simulation purpose          #
+# Made by yurihikari https://github.com/yurihikari  #
+# ------------------------------------------------- #
 
 
 pygame.init()
@@ -13,7 +16,7 @@ pygame.init()
 screenW,screenH = 1920, 1080
 screen = pygame.display.set_mode((screenW, screenH))
 pygame.display.set_caption('Smol Solar System')
-# Some colors for references
+# Some colors rgb for references
 black = (0, 0, 0)
 white = (255, 255, 255)
 green = (0, 255, 0)
@@ -51,16 +54,16 @@ menumusic = pygame.mixer.Sound("pause.ogg")
 # screen.set_at((10, 10), (255,0,0))
 
 class solarObject:
-    def __init__(self,name, color, distancepx, realradius, radius, range):
+    def __init__(self,name, color, distancepx, realdistance, radius, range):
         self.name = name
-        self.color = color
+        self.color = color 
         self.distancepx = distancepx # Distance from the sun in px for the display
-        self.realradius = realradius # Real Distance from the Sun
+        self.realdistance = realdistance # Real Distance from the Sun
         self.radius = radius # Display Planet Radius in px
         self.angle = 0
-        self.range = range # Just to remind me the range between each
+        self.range = range # Just to remind me the range between each, not used
 
-
+# Sun X and Y coordinates
 sun_x = screenW/2
 sun_y = screenH/2
 
@@ -73,43 +76,39 @@ def calculate_period(radius, central_mass):
     period = (2 * math.pi * math.pow(radius, 3 / 2)) / math.pow(G * central_mass, 1 / 2)
     accelerated_period = period / EMULATION_SPEED
     return round(accelerated_period, 2)
-# Function for Angle Calculation per Frame
-def angle_per_frame(period):
+# Function to calculate Angle Calculation per Frame
+def radiant_per_frame(period):
     total_frames = period * FPS
     rpf = -1 * (2 * math.pi) / total_frames
     return rpf # Radiant Per Frame
 
-def getDistance(pos):
-    print(pos)
-
 # Calculate the AU distance and add some variables to make it displayable
-def calculateAU(distance):
-    # print(130 + distance/EARTH_DISTANCE*20)
-    return 130 + distance/EARTH_DISTANCE*20 #130 (Sun sprite size) + Conversion to UA * Multiplicator for bigger gap between each planet
-
-def reverseAU(distancepx):
+def convert_to_display_distance(realdistance):
+    return 130 + realdistance/EARTH_DISTANCE*20 #130 (Sun sprite size) + Conversion to UA * Multiplicator for bigger gap between each planet
+# Calculate back the real distance
+def convert_to_real_distance(distancepx):
     return (distancepx-130)*EARTH_DISTANCE/20
-
-def sun_distance(mouse):
+# Calculate Mouse distance from the sun
+def mouse_sun_distance(mouse):
     d = math.sqrt(math.pow(sun_x-mouse[0],2) + math.pow(sun_y-mouse[1],2))
     return d
 
 #Necessary Declaration
 planet_period = 0
-planet_angle_per_frame = 0
+planet_radiant_per_frame = 0
 
 # The Sun as reference and not moving
 sun = solarObject("Sun", (0,0,0), 0, 0, 0, (0,120))
 # Planets Array
 planets = [ 
-            solarObject("Venus", (255,100,20), calculateAU(VENUS_DISTANCE) , VENUS_DISTANCE, 7, (120, 130)), \
-            solarObject("Mercury", (255,0,0), calculateAU(MERCURY_DISTANCE), MERCURY_DISTANCE, 7, (130, 150)), \
-            solarObject("Earth", (0,100,255), calculateAU(EARTH_DISTANCE), EARTH_DISTANCE, 14, (130, 200)), \
-            solarObject("Mars", (255,170,10), calculateAU(MARS_DISTANCE), MARS_DISTANCE, 10, (200,280)),\
-            solarObject("Jupiter", (100,100,100), calculateAU(JUPITER_DISTANCE), JUPITER_DISTANCE, 40, (280, 500)),\
-            solarObject("Saturn", (150,150,150), calculateAU(SATURN_DISTANCE), SATURN_DISTANCE, 30, (500,600)),\
-            solarObject("Uranus", (255,255,255), calculateAU(URANUS_DISTANCE), URANUS_DISTANCE, 24.6, (600,700)),\
-            solarObject("Neptune", (100,100,255), calculateAU(NEPTUNE_DISTANCE), NEPTUNE_DISTANCE, 20, (700,800)),\
+            solarObject("Venus", (255,100,20), convert_to_display_distance(VENUS_DISTANCE) , VENUS_DISTANCE, 7, (120, 130)), \
+            solarObject("Mercury", (255,0,0), convert_to_display_distance(MERCURY_DISTANCE), MERCURY_DISTANCE, 7, (130, 150)), \
+            solarObject("Earth", (0,100,255), convert_to_display_distance(EARTH_DISTANCE), EARTH_DISTANCE, 14, (130, 200)), \
+            solarObject("Mars", (255,170,10), convert_to_display_distance(MARS_DISTANCE), MARS_DISTANCE, 10, (200,280)),\
+            solarObject("Jupiter", (100,100,100), convert_to_display_distance(JUPITER_DISTANCE), JUPITER_DISTANCE, 40, (280, 500)),\
+            solarObject("Saturn", (150,150,150), convert_to_display_distance(SATURN_DISTANCE), SATURN_DISTANCE, 30, (500,600)),\
+            solarObject("Uranus", (255,255,255), convert_to_display_distance(URANUS_DISTANCE), URANUS_DISTANCE, 24.6, (600,700)),\
+            solarObject("Neptune", (100,100,255), convert_to_display_distance(NEPTUNE_DISTANCE), NEPTUNE_DISTANCE, 20, (700,800)),\
             ]
 
 # Not 100% Accurate Size scaling
@@ -121,10 +120,12 @@ clock = pygame.time.Clock()
 # Some events variables
 orbit = True
 orbit_width = 1
-orbit_color = white
 speed_text = "X" + str(int(EMULATION_SPEED)) + " Speed (UP KEY/DOWN KEY)"
+# Mouse button value
 LEFT = 1
+MIDDLE = 2
 RIGHT = 3
+# Increment variable for generated planet name
 planet_name = 1
 while play:
     for event in pygame.event.get():
@@ -140,13 +141,15 @@ while play:
                 orbit = False
         if event.type == pygame.MOUSEBUTTONUP and paused == False and event.button == LEFT:
             mouse = event.pos 
-            distance_inpx = int(sun_distance(mouse))
+            # Convert mouse distance from sun to Real distance from sun
+            distance_inpx = int(mouse_sun_distance(mouse))
+            # Check if click too close to the sun
             if(distance_inpx <= 130):
                 print("not possible")
             else:
-                planets.append(solarObject(str(planet_name), (r.random()*255,r.random()*255,r.random()*255), int(distance_inpx), reverseAU(int(distance_inpx)), r.randrange(7,50), (130, 150)))
+                planets.append(solarObject(str(planet_name), (r.random()*255,r.random()*255,r.random()*255), int(distance_inpx), convert_to_real_distance(int(distance_inpx)), r.randrange(7,50), (130, 150)))
             # RANDOM_DISTANCE = r.randrange(1*math.pow(10,10),7*math.pow(10,12))
-            # planets.append(solarObject(str(planet_name), (r.random()*255,r.random()*255,r.random()*255), calculateAU(float(RANDOM_DISTANCE)), float(RANDOM_DISTANCE), r.randrange(7,50), (130, 150)))
+            # planets.append(solarObject(str(planet_name), (r.random()*255,r.random()*255,r.random()*255), convert_to_display_distance(float(RANDOM_DISTANCE)), float(RANDOM_DISTANCE), r.randrange(7,50), (130, 150)))
             planet_name += 1
         if event.type == pygame.KEYUP:
             # Emulation speed event
@@ -160,9 +163,13 @@ while play:
                     speed_text = "X" + str(int(EMULATION_SPEED)) + " Speed (UP KEY/DOWN KEY)"
             # Pause Event
             if event.key == pygame.K_ESCAPE and paused == False:
+                # Stop music from main screen
                 pygame.mixer.music.pause()
+                # Start music from pause screen
                 menumusic.play(-1)
+                # Set paused to True
                 paused = True
+                # Generate Pause text
                 pause_text = "Paused"
                 pause_help1 = "Press c or ESC to Continue"
                 pause_help2 = "Press q to Quit"
@@ -178,48 +185,49 @@ while play:
                 screen.blit(TextSurf2, TextRect2)
                 pygame.display.update()
             elif event.key == pygame.K_c and paused == True:
+                # Stop Menu music, unpause main music and paused is false
                 menumusic.stop()
                 pygame.mixer.music.unpause()
                 paused = False
             elif event.key == pygame.K_ESCAPE and paused == True:
+                # Stop Menu music, unpause main music and paused is false
                 menumusic.stop()
                 pygame.mixer.music.unpause()
                 paused = False
             elif event.key == pygame.K_q and paused == True:
+                # Close the app
                 play = False
 
                 
 
     if(not paused):
-        screen.blit(bg, (0, 0))
-        pygame.draw.circle(screen, yellow, [sun_x, sun_y], sun.distancepx, 0, 64)
-        screen.blit(sunImg, (screenW/2-125, screenH/2-125 ))
+        screen.blit(bg, (0, 0)) # Set our image as background
+        screen.blit(sunImg, (screenW/2-125, screenH/2-125 )) # Draw the Sun Image in the center of the screen
+ 
         # For each planet in our array
         for planet in planets:
             # Calculate angle, acceleration... Physical stuff
-            planet_period = calculate_period(planet.realradius, MASS_OF_THE_SUN)
-            planet_angle_per_frame = angle_per_frame(planet_period)
-            planet.angle = planet.angle + planet_angle_per_frame
-            # Movement
+            planet_period = calculate_period(planet.realdistance, MASS_OF_THE_SUN)
+            planet_radiant_per_frame = radiant_per_frame(planet_period)
+            planet.angle = planet.angle + planet_radiant_per_frame
+            # Planets Movement
             planet_x = (round((planet.distancepx*math.cos(planet.angle)) + sun_x, 2))
             planet_y = (round((planet.distancepx*math.sin(planet.angle)) + sun_y, 2))
 
-            
-
-            # get the orbit line from the sun
+            # get the sun orbit 
             sun_orbit_x = sun_x
             sun_orbit_y = sun_y
-            # Draw the orbit line
+            # Draw the orbit line (Distance from the sun orbit (planet.distancepx))
             if(orbit == True):
                 pygame.draw.circle(screen, planet.color, [sun_orbit_x, sun_orbit_y], planet.distancepx, width=orbit_width)
             # Draw the planet
             pygame.draw.circle(screen, planet.color, [planet_x, planet_y], planet.radius)
-            # Name
+            # Generate Planet Name Text Label
             planet_text = planet.name
             PlanetTextSurf, PlanetTextRect = text_objects(planet_text, font)
             PlanetTextRect.center = (planet_x, planet_y-planet.radius-20)
             screen.blit(PlanetTextSurf, PlanetTextRect)
-
+            # Generate Display Speed Text Value
             speedTextSurf, speedTextRect = text_objects(speed_text, font)
             PlanetTextRect.center = (40, 40)
             screen.blit(speedTextSurf, speedTextRect)
