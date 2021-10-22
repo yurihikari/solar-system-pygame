@@ -1,6 +1,12 @@
 import sys, pygame, math
 import random as r 
 
+
+# -------------------------------------------- #
+#   Please read the readme.md for more details #
+# -------------------------------------------- #
+
+
 pygame.init()
 
 # Screen Definition
@@ -16,17 +22,19 @@ blue = (0,0, 255)
 
 # Constants
 G = 6.7 * math.pow(10, -11)
-# DISTANCE FROM THE SUN FOR EACH PLANET
-MERCURY_DISTANCE = 7.8 * math.pow(10, 10)
-EARTH_DISTANCE = 1.5 * math.pow(10, 11) 
+# DISTANCE FROM THE SUN FOR EACH PLANET FROM THE SOLAR SYSTEM
+VENUS_DISTANCE = 1.1 * math.pow(10,10) # VERY FAST
+MERCURY_DISTANCE = 7.8 * math.pow(10, 10) # 7 800 000 000 40 000 000 000
+EARTH_DISTANCE = 1.5 * math.pow(10, 11) # Also equals to 1 AU
 MARS_DISTANCE = 2.8 * math.pow(10, 11)
-NEPTUNE_DISTANCE = 4.5 * math.pow(10, 12)
 JUPITER_DISTANCE = 7.8 * math.pow(10, 11)
 SATURN_DISTANCE = 1.4 * math.pow(10,12)
-VENUS_DISTANCE = 1.1 * math.pow(10,10) # VERY FAST
 URANUS_DISTANCE = 1.8 * math.pow(10,12)
-RANDOM_DISTANCE = r.randrange(1,7) * math.pow(10, r.randrange(10,12))
+NEPTUNE_DISTANCE = 4.5 * math.pow(10, 12)
+# For physical calculation
 MASS_OF_THE_SUN = 2.0 * math.pow(10, 30)
+
+# FPS and Emulation Speed
 EMULATION_SPEED = 10000000 # 1 for Real time speed but its too slow
 FPS = 60
 
@@ -74,6 +82,19 @@ def angle_per_frame(period):
 def getDistance(pos):
     print(pos)
 
+# Calculate the AU distance and add some variables to make it displayable
+def calculateAU(distance):
+    # print(130 + distance/EARTH_DISTANCE*20)
+    return 130 + distance/EARTH_DISTANCE*20 #130 (Sun sprite size) + Conversion to UA * Multiplicator for bigger gap between each planet
+
+def reverseAU(distancepx):
+    return (distancepx-130)*EARTH_DISTANCE/20
+
+def sun_distance(mouse):
+    d = math.sqrt(math.pow(sun_x-mouse[0],2) + math.pow(sun_y-mouse[1],2))
+    return d
+
+#Necessary Declaration
 planet_period = 0
 planet_angle_per_frame = 0
 
@@ -81,30 +102,30 @@ planet_angle_per_frame = 0
 sun = solarObject("Sun", (0,0,0), 0, 0, 0, (0,120))
 # Planets Array
 planets = [ 
-            solarObject("Mercury", (255,0,0), 150, MERCURY_DISTANCE, 7, (130, 150)), \
-            solarObject("Venus", (255,100,20), 130, VENUS_DISTANCE, 7, (120, 130)), \
-            solarObject("Earth", (0,100,255), 200, EARTH_DISTANCE, 14, (130, 200)), \
-            solarObject("Mars", (255,170,10), 280, MARS_DISTANCE, 10, (200,280)),\
-            solarObject("Jupiter", (100,100,100), 500, JUPITER_DISTANCE, 55, (280, 500)),\
-            solarObject("Saturn", (150,150,150), 600, SATURN_DISTANCE, 50, (500,600)),\
-            solarObject("Uranus", (255,255,255), 700, URANUS_DISTANCE, 24.6, (600,700)),\
-            solarObject("Neptune", (100,100,255), 800, NEPTUNE_DISTANCE, 20, (700,800)),\
+            solarObject("Venus", (255,100,20), calculateAU(VENUS_DISTANCE) , VENUS_DISTANCE, 7, (120, 130)), \
+            solarObject("Mercury", (255,0,0), calculateAU(MERCURY_DISTANCE), MERCURY_DISTANCE, 7, (130, 150)), \
+            solarObject("Earth", (0,100,255), calculateAU(EARTH_DISTANCE), EARTH_DISTANCE, 14, (130, 200)), \
+            solarObject("Mars", (255,170,10), calculateAU(MARS_DISTANCE), MARS_DISTANCE, 10, (200,280)),\
+            solarObject("Jupiter", (100,100,100), calculateAU(JUPITER_DISTANCE), JUPITER_DISTANCE, 40, (280, 500)),\
+            solarObject("Saturn", (150,150,150), calculateAU(SATURN_DISTANCE), SATURN_DISTANCE, 30, (500,600)),\
+            solarObject("Uranus", (255,255,255), calculateAU(URANUS_DISTANCE), URANUS_DISTANCE, 24.6, (600,700)),\
+            solarObject("Neptune", (100,100,255), calculateAU(NEPTUNE_DISTANCE), NEPTUNE_DISTANCE, 20, (700,800)),\
             ]
 
-
 # Not 100% Accurate Size scaling
-# Display Distance made by hand (or it would be too far)
+
 
 paused = False
 play = True
 clock = pygame.time.Clock()
 # Some events variables
+orbit = True
 orbit_width = 1
 orbit_color = white
 speed_text = "X" + str(int(EMULATION_SPEED)) + " Speed (UP KEY/DOWN KEY)"
 LEFT = 1
 RIGHT = 3
-
+planet_name = 1
 while play:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -113,14 +134,21 @@ while play:
             mouse = event.pos
         # Orbit Circle Hide/Show
         if event.type == pygame.MOUSEBUTTONUP and paused == False and event.button == RIGHT:
-            if(orbit_color == white):
-                orbit_color = black
-            elif(orbit_color == black):
-                orbit_color = white
+            if(orbit == False):
+                orbit = True
+            elif(orbit == True):
+                orbit = False
         if event.type == pygame.MOUSEBUTTONUP and paused == False and event.button == LEFT:
-            getDistance(event.pos)
+            mouse = event.pos 
+            distance_inpx = int(sun_distance(mouse))
+            if(distance_inpx <= 130):
+                print("not possible")
+            else:
+                planets.append(solarObject(str(planet_name), (r.random()*255,r.random()*255,r.random()*255), int(distance_inpx), reverseAU(int(distance_inpx)), r.randrange(7,50), (130, 150)))
+            # RANDOM_DISTANCE = r.randrange(1*math.pow(10,10),7*math.pow(10,12))
+            # planets.append(solarObject(str(planet_name), (r.random()*255,r.random()*255,r.random()*255), calculateAU(float(RANDOM_DISTANCE)), float(RANDOM_DISTANCE), r.randrange(7,50), (130, 150)))
+            planet_name += 1
         if event.type == pygame.KEYUP:
-            print(event.key, event.unicode, event.scancode)
             # Emulation speed event
             if event.key == pygame.K_UP:
                 if EMULATION_SPEED < 80000000 and paused == False:
@@ -133,7 +161,7 @@ while play:
             # Pause Event
             if event.key == pygame.K_ESCAPE and paused == False:
                 pygame.mixer.music.pause()
-                menumusic.play()
+                menumusic.play(-1)
                 paused = True
                 pause_text = "Paused"
                 pause_help1 = "Press c or ESC to Continue"
@@ -182,7 +210,8 @@ while play:
             sun_orbit_x = sun_x
             sun_orbit_y = sun_y
             # Draw the orbit line
-            pygame.draw.circle(screen, orbit_color, [sun_orbit_x, sun_orbit_y], planet.distancepx, width=orbit_width)
+            if(orbit == True):
+                pygame.draw.circle(screen, planet.color, [sun_orbit_x, sun_orbit_y], planet.distancepx, width=orbit_width)
             # Draw the planet
             pygame.draw.circle(screen, planet.color, [planet_x, planet_y], planet.radius)
             # Name
