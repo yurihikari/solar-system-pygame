@@ -45,6 +45,7 @@ bg = pygame.image.load("space.jpg")
 sunImg = pygame.image.load("sun.png")
 bgmusic = pygame.mixer.music.load('bgmusic.ogg')
 pygame.mixer.music.play(-1)
+pygame.mixer.music.set_volume(0.4)
 menumusic = pygame.mixer.Sound("pause.ogg")
 
 # pygame.draw.circle(screen,  (255, 100, 0), (100,100), 20)
@@ -87,7 +88,7 @@ def convert_to_display_distance(realdistance):
 def convert_to_real_distance(distancepx):
     return (distancepx-130)*EARTH_DISTANCE/20
 # Calculate Mouse distance from the sun
-def mouse_sun_distance(mouse):
+def mouse_sun_distance(mouse): #(x, y)
     d = math.sqrt(math.pow(sun_x-mouse[0],2) + math.pow(sun_y-mouse[1],2))
     return d
 
@@ -143,7 +144,7 @@ while play:
             distance_inpx = int(mouse_sun_distance(mouse))
             # Check if click too close to the sun
             if(distance_inpx <= 130):
-                print("not possible")
+                planets.append(solarObject(str(planet_name), (r.random()*255,r.random()*255,r.random()*255), 140, convert_to_real_distance(140), r.randrange(7,50), (130, 150)))
             else:
                 planets.append(solarObject(str(planet_name), (r.random()*255,r.random()*255,r.random()*255), int(distance_inpx), convert_to_real_distance(int(distance_inpx)), r.randrange(7,50), (130, 150)))
             # RANDOM_DISTANCE = r.randrange(1*math.pow(10,10),7*math.pow(10,12))
